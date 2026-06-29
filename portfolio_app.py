@@ -97,7 +97,7 @@ else:
                 st.markdown(
                     "<div style='background-color: #e2e8f0; height: 160px; border-radius: 6px; "
                     "display: flex; align-items: center; justify-content: center; text-align: center; color: #64748b;'>"
-                    "Place your photo file 'my_photo.jpg' here"
+                    "Place your photo file 'my_photo.JPG' here"
                     "</div>",
                     unsafe_allow_html=True
                 )
