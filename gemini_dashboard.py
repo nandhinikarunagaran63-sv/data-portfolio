@@ -22,9 +22,7 @@ else:
         placeholder="Enter AI Studio API Key...",
         help="Paste your temporary Gemini API Key here to run the resume analysis workflow."
     )
- # 2. Restored Dynamic Gemini Client Configuration
-import google.generativeai as genai
-
+# 2. Restored Dynamic Gemini Client Configuration
 if "GEMINI_API_KEY" in st.secrets and st.secrets["GEMINI_API_KEY"]:
     api_key = st.secrets["GEMINI_API_KEY"]
 else:
@@ -41,15 +39,12 @@ if api_key:
     class LegacyCompatibilityBridge:
         def generate_content(self, *args, **kwargs):
             kwargs.pop('model', None)
-                        # Correctly flatten nested tuples/lists passed by your downstream analysis code
             passed_items = []
             for arg in args:
                 if isinstance(arg, (list, tuple)):
                     passed_items.extend(list(arg))
                 else:
                     passed_items.append(arg)
-
-           
                 
             cleaned_inputs = []
             for item in passed_items:
@@ -57,21 +52,21 @@ if api_key:
                     cleaned_inputs.append({"mime_type": "application/pdf", "data": item["data"]})
                 elif hasattr(item, 'read'):
                     cleaned_inputs.append({"mime_type": "application/pdf", "data": item.read()})
-                               else:
+                else:
                     cleaned_inputs.append(item)
-
+            
             try:
                 active_model = genai.GenerativeModel("gemini-1.5-flash-latest")
                 return active_model.generate_content(cleaned_inputs, **kwargs)
-            except Exception as e:
+            except Exception:
                 active_model = genai.GenerativeModel("models/gemini-1.5-flash")
                 return active_model.generate_content(cleaned_inputs, **kwargs)
 
-            client = LegacyCompatibilityBridge()
-            model = client
+    client = LegacyCompatibilityBridge()
+    model = client
 else:
-    st.sidebar.warning(" API Key Required: Please provide an active Gemini API key in the sidebar.")
-    st.info(" Welcome! To test this portfolio app, please paste a temporary Gemini API Key in the sidebar input box.")
+    st.sidebar.warning("⚠️ API Key Required: Please provide an active Gemini API key in the sidebar.")
+    st.info("👋 Welcome! To test this portfolio app, please paste a temporary Gemini API Key in the sidebar input box.")
     st.stop()
 
     
