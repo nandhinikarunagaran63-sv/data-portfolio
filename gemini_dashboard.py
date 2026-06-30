@@ -10,18 +10,46 @@ st.set_page_config(page_title="Enterprise AI Resume Intelligence", layout="wide"
 st.title(" Enterprise AI Resume Intelligence Dashboard")
 st.caption("Complete End-to-End Autonomous Talent Processing System")
 import streamlit as st
-import google.generativeai as genai
+# 2. Universal Open-Source AI Model Integration (Bypasses Google Endpoints Completely)
+import streamlit as st
+from transformers import pipeline
 
-# 1. Safely pull key from Streamlit Cloud Secrets or local user input
-if "GEMINI_API_KEY" in st.secrets and st.secrets["GEMINI_API_KEY"]:
-    api_key = st.secrets["GEMINI_API_KEY"]
-else:
-    api_key = st.sidebar.text_input(
-        label="Gemini API Authorization",
-        type="password",
-        placeholder="Enter AI Studio API Key...",
-        help="Paste your temporary Gemini API Key here to run the resume analysis workflow."
-    )
+@st.cache_resource
+def load_analysis_model():
+    # Loads a completely free, open-source model directly onto the server container
+    return pipeline("text2text-generation", model="google/flan-t5-base")
+
+try:
+    analyzer_pipeline = load_analysis_model()
+    
+    class LocalAIModelBridge:
+        def generate_content(self, *args, **kwargs):
+            # Capture the prompt string text passing from your dropdown selectors
+            prompt_text = ""
+            for item in args:
+                if isinstance(item, str):
+                    prompt_text += item
+                elif isinstance(item, list):
+                    for sub_item in item:
+                        if isinstance(sub_item, str):
+                            prompt_text += sub_item
+
+            # Execute the resume analysis text generation processing loop locally
+            results = analyzer_pipeline(prompt_text, max_length=512, do_sample=False)
+            generated_text = results[0]['generated_text']
+            
+            # Create a mock response object structure so your downstream code functions perfectly
+            class MockResponse:
+                def __init__(self, text_output):
+                    self.text = text_output
+            return MockResponse(generated_text)
+
+    # Point your old variable configurations to our new local framework bridge
+    client = LocalAIModelBridge()
+    model = client
+except Exception as model_err:
+    st.error(f"AI Core Initialization Warning: {model_err}")
+
 # 2. Restored Dynamic Gemini Client Configuration
 if "GEMINI_API_KEY" in st.secrets and st.secrets["GEMINI_API_KEY"]:
     api_key = st.secrets["GEMINI_API_KEY"]
