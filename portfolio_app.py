@@ -92,7 +92,7 @@ else:
         with col_photo:
             try:
                 # Direct public test image string 
-                st.image("https://ibb.co", use_container_width=True)
+                st.image("C:\Users\vijay\OneDrive\Desktop\WhatsApp Image 2026-06-29 at 4.52.40 PM.jpg", use_container_width=True)
             except Exception as e:
                 st.error("Image loading failed.")
 
