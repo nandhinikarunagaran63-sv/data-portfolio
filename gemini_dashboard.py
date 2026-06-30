@@ -9,15 +9,14 @@ from fpdf import FPDF
 st.set_page_config(page_title="Enterprise AI Resume Intelligence", layout="wide")
 st.title(" Enterprise AI Resume Intelligence Dashboard")
 st.caption("Complete End-to-End Autonomous Talent Processing System")
-import streamlit as st
 # 2. Universal Open-Source AI Model Integration (Bypasses Google Endpoints Completely)
 import streamlit as st
 from transformers import pipeline
 
 @st.cache_resource
 def load_analysis_model():
-    # Loads a completely free, open-source model directly onto the server container
-    return pipeline("text2text-generation", model="google/flan-t5-base")
+    # Fixed the task name to 'text-generation' to match the active server library version
+    return pipeline("text-generation", model="google/flan-t5-base")
 
 try:
     analyzer_pipeline = load_analysis_model()
@@ -36,7 +35,7 @@ try:
 
             # Execute the resume analysis text generation processing loop locally
             results = analyzer_pipeline(prompt_text, max_length=512, do_sample=False)
-            generated_text = results[0]['generated_text']
+            generated_text = results[0]['generated_text'] if isinstance(results, list) else results['generated_text']
             
             # Create a mock response object structure so your downstream code functions perfectly
             class MockResponse:
@@ -49,6 +48,7 @@ try:
     model = client
 except Exception as model_err:
     st.error(f"AI Core Initialization Warning: {model_err}")
+
 
 # 2. Restored Dynamic Gemini Client Configuration
 if "GEMINI_API_KEY" in st.secrets and st.secrets["GEMINI_API_KEY"]:
