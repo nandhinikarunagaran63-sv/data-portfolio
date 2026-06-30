@@ -25,13 +25,27 @@ else:
     )
 
 if api_key:
-    # Use the stable, direct configuration method
+    # 1. Configure the core library
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    
+    # 2. Create a smart interface wrapper to bridge your old code layout
+    class CodeBridge:
+        def generate_content(self, *args, **kwargs):
+            # If your code passed model="gemini...", strip it out to prevent the crash
+            kwargs.pop('model', None)
+            
+            # Use the correct direct GenerativeModel pipeline format
+            active_model = genai.GenerativeModel("gemini-1.5-flash")
+            return active_model.generate_content(*args, **kwargs)
+            
+    # Point both variables to our smart bridge function
+    client = CodeBridge()
+    model = client
 else:
     st.sidebar.warning(" API Key Required: Please provide an active Gemini API key in the sidebar.")
     st.info(" Welcome! To test this portfolio app, please paste a temporary Gemini API Key in the sidebar input box.")
     st.stop()
+
 
 # 3. Project Workflow Sidebar Controls
 st.sidebar.header(" Project Workflow Setup")
