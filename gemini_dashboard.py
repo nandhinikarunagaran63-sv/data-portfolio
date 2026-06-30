@@ -1,7 +1,7 @@
 import streamlit as st
 import json
-import pandas as pd
-from transformers import pipeline
+import base64
+import requests
 from fpdf import FPDF
 
 # 1. Setup Streamlit Page Layout
@@ -9,37 +9,15 @@ st.set_page_config(page_title="Enterprise AI Resume Intelligence", layout="wide"
 st.title(" Enterprise AI Resume Intelligence Dashboard")
 st.caption("Complete End-to-End Autonomous Talent Processing System")
 
-# 2. Universal Open-Source AI Model Integration (Bypasses Google Endpoints Completely)
-@st.cache_resource
-def load_analysis_model():
-    return pipeline("text-generation", model="google/flan-t5-base")
-
-try:
-    analyzer_pipeline = load_analysis_model()
-    
-    class LocalAIModelBridge:
-        def generate_content(self, *args, **kwargs):
-            prompt_text = ""
-            for item in args:
-                if isinstance(item, str):
-                    prompt_text += item
-                elif isinstance(item, list):
-                    for sub_item in item:
-                        if isinstance(sub_item, str):
-                            prompt_text += sub_item
-
-            results = analyzer_pipeline(prompt_text, max_length=512, do_sample=False)
-            generated_text = results[0]['generated_text'] if isinstance(results, list) else results['generated_text']
-            
-            class MockResponse:
-                def __init__(self, text_output):
-                    self.text = text_output
-            return MockResponse(generated_text)
-
-    client = LocalAIModelBridge()
-    model = client
-except Exception as model_err:
-    st.error(f"AI Core Initialization Warning: {model_err}")
+# 2. Secure Direct Endpoint Route Setup (Bypasses Library Version Mismatches)
+if "GEMINI_API_KEY" in st.secrets and st.secrets["GEMINI_API_KEY"]:
+    api_key = st.secrets["GEMINI_API_KEY"]
+else:
+    api_key = st.sidebar.text_input(
+        label="Gemini API Authorization",
+        type="password",
+        placeholder="Enter your Gemini API key (AIzaSy...)"
+    )
 
 # 3. Project Workflow Sidebar Controls
 st.sidebar.header(" Project Workflow Setup")
@@ -49,7 +27,7 @@ target_role = st.sidebar.text_input(" Target Job Role:", placeholder="e.g., Seni
 
 st.sidebar.markdown("---")
 st.sidebar.info(" **Step 2:** Upload resume document.")
-uploaded_file = st.sidebar.file_uploader(" Upload Resume:", type=["txt", "pdf"])
+uploaded_file = st.sidebar.file_uploader(" Upload Resume:", type=["pdf"])
 
 # Helper function to generate a truly complete PDF report block safely
 def create_pdf_report(data):
@@ -118,40 +96,66 @@ def create_pdf_report(data):
     return bytes(pdf.output())
 
 # 4. Processing Engine Execution
+if not api_key:
+    st.sidebar.warning("⚠️ API Key Required: Please provide an active Gemini API key in the sidebar.")
+    st.info("👋 Welcome! To test this portfolio app, please paste a temporary Gemini API Key in the sidebar input box.")
+    st.stop()
+
 if uploaded_file and target_role:
-    with st.spinner(" Executing 8-Step Talent Evaluation Workflow... Please Wait..."):
+    with st.spinner(" Executing Deep Talent Evaluation Workflow... Please Wait..."):
         try:
-            if uploaded_file.type == "application/pdf":
-                resume_text = "PDF File Content Uploaded"
-            else:
-                resume_text = uploaded_file.read().decode("utf-8")
+            # Safely encode the PDF data bytes to base64 to send via direct web request channel
+            pdf_bytes = uploaded_file.read()
+            base64_pdf = base64.b64encode(pdf_bytes).decode("utf-8")
 
             prompt = f"""
-            Analyze the attached resume against target role: '{target_role}'. Resume details: {resume_text}.
-            Return single JSON with keys: candidate_name, target_role, readiness_score, missing_skills, recommended_certs, technical_questions, project_questions, scenario_questions.
+            You are an expert AI Executive Recruiter and Technical Lead.
+            Analyze the attached resume completely against the target job role: '{target_role}'.
+            
+            You MUST return a single, valid JSON object containing exactly these fields populated with rich detailed text parsed from the resume context:
+            {{
+                "candidate_name": "Extract the actual full name of the candidate found in the resume document",
+                "target_role": "{target_role}",
+                "readiness_score": 85,
+                "missing_skills": "Write a highly comprehensive bulleted analysis of specific skills gaps and tools missing compared to the role criteria",
+                "recommended_certs": "Recommend explicit professional courses and certifications to fill those exact learning gaps",
+                "technical_questions": [Provide a list of EXACTLY 10 distinct, deep technical interview questions based on their gaps],
+                "project_questions": [Provide a list of EXACTLY 5 structural, architecture-focused project evaluation questions],
+                "scenario_questions": [Provide a list of EXACTLY 5 complex situational or case study assessment questions]
+            }}
             """
             
-            response = model.generate_content(prompt)
-            
-            try:
-                parsed_json = json.loads(response.text)
-            except Exception:
-                parsed_json = {
-                    "candidate_name": "Applicant Profile",
-                    "target_role": target_role,
-                    "readiness_score": 75,
-                    "missing_skills": "Evaluation complete. Review the system profile metrics.",
-                    "recommended_certs": "Professional certification training track recommended.",
-                    "technical_questions": ["Explain your core technical workflow components."],
-                    "project_questions": ["Describe the scale and architectural details of your last project."],
-                    "scenario_questions": ["How do you handle production timeline constraints?"]
+            # Direct HTTP connection pipeline to Gemini production API endpoints
+            api_url = f"https://googleapis.com{api_key}"
+            headers = {"Content-Type": "application/json"}
+            payload = {
+                "contents": [{
+                    "parts": [
+                        {"inlineData": {"mimeType": "application/pdf", "data": base64_pdf}},
+                        {"text": prompt}
+                    ]
+                }],
+                "generationConfig": {
+                    "responseMimeType": "application/json"
                 }
+            }
+            
+            web_response = requests.post(api_url, headers=headers, json=payload)
+            response_json = web_response.json()
+            
+            if "candidates" in response_json:
+                raw_text = response_json['candidates'][0]['content']['parts'][0]['text']
+                parsed_json = json.loads(raw_text)
+            else:
+                st.error(f"API Error Response: {response_json}")
+                st.stop()
             
             st.success("🎉 Analysis Complete!")
             
+            # Display real human-readable layout cards
             col1, col2 = st.columns(2)
             with col1:
-                st.metric(label="👤 Candidate Profile", value=parsed_json.get('candidate_name', 'Applicant'))
+                st.metric(label="👤 Candidate Profile Name", value=parsed_json.get('candidate_name', 'Applicant'))
             with col2:
                 st.metric(label="🎯 Role Readiness Score", value=f"{parsed_json.get('readiness_score', 75)}/100")
             
@@ -159,7 +163,7 @@ if uploaded_file and target_role:
             st.subheader("📋 Target Job Position")
             st.write(parsed_json.get('target_role', target_role))
             
-            st.subheader("🔍 Skill Gap Analysis")
+            st.subheader("🔍 Detailed Skill Gap Analysis")
             st.write(parsed_json.get('missing_skills', ''))
             
             st.subheader("🎓 Recommended Courses & Certifications")
@@ -168,24 +172,25 @@ if uploaded_file and target_role:
             st.markdown("---")
             st.subheader("💡 Personalized Interview Preparation Matrix")
             
-            st.markdown("### 🛠️ Technical Concept Questions")
+            st.markdown("### 🛠️ Technical Concept Questions (10 Total)")
             for idx, q in enumerate(parsed_json.get("technical_questions", []), 1):
                 st.write(f"**Question {idx}:** {q}")
                 
-            st.markdown("### 💻 Project-Based Probes")
+            st.markdown("### 💻 Project-Based Probes (5 Total)")
             for idx, q in enumerate(parsed_json.get("project_questions", []), 1):
                 st.write(f"**Question {idx}:** {q}")
                 
-            st.markdown("### 📊 Case Scenario Challenges")
+            st.markdown("### 📊 Case Scenario Challenges (5 Total)")
             for idx, q in enumerate(parsed_json.get("scenario_questions", []), 1):
                 st.write(f"**Question {idx}:** {q}")
             
+            # Secure report downloader creation block
             try:
-                pdf_bytes = create_pdf_report(parsed_json)
+                final_pdf_bytes = create_pdf_report(parsed_json)
                 st.sidebar.markdown("---")
                 st.sidebar.download_button(
                     label="📥 Download Final PDF Report",
-                    data=pdf_bytes,
+                    data=final_pdf_bytes,
                     file_name=f"{parsed_json.get('candidate_name', 'Candidate')}_Full_Analysis.pdf",
                     mime="application/pdf"
                 )
