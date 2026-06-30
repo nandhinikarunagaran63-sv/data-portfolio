@@ -45,7 +45,7 @@ if api_key:
                     cleaned_contents.append(item)
 
             active_model = genai.GenerativeModel("gemini-1.5-flash")
-            return active_model.generate_content(cleaned_contents, **kwargs)
+            return active_model.generate_content(*cleaned_contents, **kwargs)
             
         @property
         def models(self):
