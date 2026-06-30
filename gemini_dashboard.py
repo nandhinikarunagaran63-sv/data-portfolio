@@ -11,7 +11,30 @@ st.title(" Enterprise AI Resume Intelligence Dashboard")
 st.caption("Complete End-to-End Autonomous Talent Processing System")
 
 # 2. Configure Gemini Client using Streamlit Secrets
-client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+# ==========================================
+# 2. CONFIGURE GEMINI CLIENT CONFIGURATION
+# ==========================================
+import streamlit as st
+import google.generativeai as genai
+
+# First, check if the application can detect your secure Streamlit Cloud deployment box
+if "GEMINI_API_KEY" in st.secrets and st.secrets["GEMINI_API_KEY"]:
+    api_key = st.secrets["GEMINI_API_KEY"]
+else:
+    # If someone else opens it and the cloud secret is missing, show a clean password input box
+    api_key = st.sidebar.text_input(
+        label="Gemini API Authorization",
+        type="password",
+        placeholder="Enter AI Studio API Key...",
+        help="Paste a valid Gemini API Key here to run the resume analysis workflow."
+    )
+
+# Initialize the client only if a valid key is provided
+if api_key:
+    client = genai.Client(api_key=api_key)
+else:
+    st.sidebar.warning("⚠️ API Key Required: Please provide an active Gemini API key to evaluate resumes.")
+    st.stop()  # Safely halts app execution until a key is supplied
 
 # 3. Project Workflow Sidebar Controls
 st.sidebar.header(" Project Workflow Setup")
