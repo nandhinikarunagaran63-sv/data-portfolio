@@ -4,12 +4,10 @@ import base64
 import requests
 from fpdf import FPDF
 
-# 1. Setup Streamlit Page Layout
 st.set_page_config(page_title="Enterprise AI Resume Intelligence", layout="wide")
 st.title(" Enterprise AI Resume Intelligence Dashboard")
 st.caption("Complete End-to-End Autonomous Talent Processing System")
 
-# 2. Secure Direct Endpoint Route Setup (Bypasses Library Version Mismatches)
 if "GEMINI_API_KEY" in st.secrets and st.secrets["GEMINI_API_KEY"]:
     api_key = st.secrets["GEMINI_API_KEY"]
 else:
@@ -19,7 +17,6 @@ else:
         placeholder="Enter your Gemini API key (AIzaSy...)"
     )
 
-# 3. Project Workflow Sidebar Controls
 st.sidebar.header(" Project Workflow Setup")
 st.sidebar.markdown("---")
 st.sidebar.info(" **Step 1:** Select target profile.")
@@ -29,7 +26,6 @@ st.sidebar.markdown("---")
 st.sidebar.info(" **Step 2:** Upload resume document.")
 uploaded_file = st.sidebar.file_uploader(" Upload Resume:", type=["pdf"])
 
-# Helper function to generate a truly complete PDF report block safely
 def create_pdf_report(data):
     pdf = FPDF()
     pdf.add_page()
@@ -95,7 +91,6 @@ def create_pdf_report(data):
         
     return bytes(pdf.output())
 
-# 4. Processing Engine Execution
 if not api_key:
     st.sidebar.warning("⚠️ API Key Required: Please provide an active Gemini API key in the sidebar.")
     st.info("👋 Welcome! To test this portfolio app, please paste a temporary Gemini API Key in the sidebar input box.")
@@ -124,7 +119,6 @@ if uploaded_file and target_role:
             }}
             """
             
-            # The correct un-truncated endpoint string concatenation construction layout
             part_a = "https://googleapis.com"
             part_b = "/v1beta/models/gemini-1.5-flash:generateContent?key="
             api_url = part_a + part_b + str(api_key)
@@ -148,11 +142,10 @@ if uploaded_file and target_role:
             if "candidates" in response_json:
                 raw_text = response_json['candidates'][0]['content']['parts'][0]['text'].strip()
                 
-                # Clean off any Markdown text container wrappers wrapped by the LLM
                 if raw_text.startswith("```json"):
-                    raw_text = raw_text.split("```json")[1].split("```")[0].strip()
+                    raw_text = raw_text.replace("```json", "").replace("```", "").strip()
                 elif raw_text.startswith("```"):
-                    raw_text = raw_text.split("```")[1].split("```")[0].strip()
+                    raw_text = raw_text.replace("```", "").strip()
                     
                 parsed_json = json.loads(raw_text)
             else:
