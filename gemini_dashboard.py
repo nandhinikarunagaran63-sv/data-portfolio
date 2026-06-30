@@ -38,8 +38,8 @@ if api_key:
             self.models = api
     client = GeminiClient(genai)
 else:
-    st.sidebar.warning("⚠️ API Key Required: Please provide an active Gemini API key in the sidebar.")
-    st.info("👋 Welcome! To test this portfolio app, please paste a temporary Gemini API Key in the sidebar input box.")
+    st.sidebar.warning(" API Key Required: Please provide an active Gemini API key in the sidebar.")
+    st.info(" Welcome! To test this portfolio app, please paste a temporary Gemini API Key in the sidebar input box.")
     st.stop()
 
 
