@@ -159,7 +159,7 @@ else:
                 # High-visibility action button that links directly to your deployed dashboard
                 st.link_button(
                     label="🔗 Launch Live AI Resume Dashboard", 
-                    url="https://streamlit.app", # Replace with your real deployed app link later!
+                    url="https://github.com/nandhinikarunagaran63-sv/data-portfolio/blob/main/dashboard_app.py", # Replace with your real deployed app link later!
                     type="primary"
                 )
                 st.markdown("---")
