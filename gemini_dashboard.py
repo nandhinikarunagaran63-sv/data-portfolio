@@ -10,43 +10,26 @@ st.set_page_config(page_title="Enterprise AI Resume Intelligence", layout="wide"
 st.title(" Enterprise AI Resume Intelligence Dashboard")
 st.caption("Complete End-to-End Autonomous Talent Processing System")
 
-# 2. Configure Gemini Client using Streamlit Secrets
 import streamlit as st
 import google.generativeai as genai
 
-# 1. Safely pull key from Streamlit Cloud Secrets or local user input
+# Fetch the key from secure Streamlit secrets or sidebar input box fallback
 if "GEMINI_API_KEY" in st.secrets and st.secrets["GEMINI_API_KEY"]:
     api_key = st.secrets["GEMINI_API_KEY"]
 else:
-    # This input box acts as the safe fallback on other laptops and Incognito mode
     api_key = st.sidebar.text_input(
         label="Gemini API Authorization",
         type="password",
         placeholder="Enter AI Studio API Key...",
-        help="Paste your temporary Gemini API Key here to run the resume analysis workflow."
+        help="Paste a temporary Gemini API Key here to run the resume analysis workflow."
     )
 
-# 2. Complete clean configuration fallback setup
 if api_key:
-    try:
-        # Configure the core library package directly
-        genai.configure(api_key=api_key)
-        
-        # Build an internal fallback routing class to prevent downstream errors
-        class DirectClientFallback:
-            def __init__(self, api):
-                self.models = self
-                self.api = api
-            def generate_content(self, model, contents, **kwargs):
-                # Safely routes text parsing directly to the active model pipeline
-                active_model = self.api.GenerativeModel(model)
-                return active_model.generate_content(contents, **kwargs)
-                
-        client = DirectClientFallback(genai)
-    except Exception as init_err:
-        st.error(f"Initialization failure: {init_err}")
+    # Use the stable, direct configuration method
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel("gemini-1.5-flash")
 else:
-    st.sidebar.warning("⚠️ API Key Required: Please provide an active Gemini API key to evaluate resumes.")
+    st.sidebar.warning("⚠️ API Key Required: Please provide an active Gemini API key in the sidebar.")
     st.info("👋 Welcome! To test this portfolio app, please paste a temporary Gemini API Key in the sidebar input box.")
     st.stop()
 
