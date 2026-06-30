@@ -92,7 +92,8 @@ def create_pdf_report(data):
         pdf.multi_cell(190, 5, f"Q{idx}: {q}")
         pdf.ln(2) # Explicitly breaks line and forces next question downward
         
-    return bytes(pdf.output())
+    return bytes(pdf.output(), encoding="utf-8")
+
 
 # 4. Processing Engine Execution
 if uploaded_file and target_role:
@@ -216,7 +217,7 @@ if uploaded_file and target_role:
             
             # 1. Full Structural PDF Exporter
             try:
-                pdf_bytes = create_pdf_report(data_package)
+                pdf_bytes = create_pdf_report(data_package)   
                 st.sidebar.download_button(
                     label=" Download Final PDF Report",
                     data=pdf_bytes,
