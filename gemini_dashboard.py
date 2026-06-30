@@ -140,12 +140,12 @@ if uploaded_file and target_role:
             response_json = web_response.json()
             
             if "candidates" in response_json:
-                raw_text = response_json['candidates'][0]['content']['parts'][0]['text'].strip()
+                raw_text = response_json['candidates'][0]['content']['parts'][0]['text']
                 
-                if raw_text.startswith("```json"):
-                    raw_text = raw_text.replace("```json", "").replace("```", "").strip()
-                elif raw_text.startswith("```"):
-                    raw_text = raw_text.replace("```", "").strip()
+                start_idx = raw_text.find("{")
+                end_idx = raw_text.rfind("}")
+                if start_idx != -1 and end_idx != -1:
+                    raw_text = raw_text[start_idx:end_idx + 1]
                     
                 parsed_json = json.loads(raw_text)
             else:
