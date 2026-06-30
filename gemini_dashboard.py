@@ -11,45 +11,43 @@ st.title(" Enterprise AI Resume Intelligence Dashboard")
 st.caption("Complete End-to-End Autonomous Talent Processing System")
 
 # 2. Configure Gemini Client using Streamlit Secrets
-# ==========================================
-# 2. CONFIGURE GEMINI CLIENT CONFIGURATION
-# ==========================================
 import streamlit as st
 import google.generativeai as genai
 
-# First, check if the application can detect your secure Streamlit Cloud deployment box
+# 1. Safely pull key from Streamlit Cloud Secrets or local user input
 if "GEMINI_API_KEY" in st.secrets and st.secrets["GEMINI_API_KEY"]:
     api_key = st.secrets["GEMINI_API_KEY"]
 else:
-    # If someone else opens it and the cloud secret is missing, show a clean password input box
+    # This input box acts as the safe fallback on other laptops and Incognito mode
     api_key = st.sidebar.text_input(
         label="Gemini API Authorization",
         type="password",
         placeholder="Enter AI Studio API Key...",
-        help="Paste a valid Gemini API Key here to run the resume analysis workflow."
+        help="Paste your temporary Gemini API Key here to run the resume analysis workflow."
     )
 
-# Initialize the client only if a valid key is provided
+# 2. Complete clean configuration fallback setup
 if api_key:
-    genai.configure(api_key=api_key)
-    
-    # This wrapper translates your code's client calls to match the library version
-    class GeminiClientWrapper:
-        def __init__(self, api):
-            self.api = api
-            # If your code uses client.models
-            self.models = self 
-            
-        def generate_content(self, *args, **kwargs):
-            # Fallback to the working direct generative model layout
-            model_name = kwargs.pop('model', 'gemini-1.5-flash')
-            model = self.api.GenerativeModel(model_name)
-            return model.generate_content(*args, **kwargs)
-            
-    client = GeminiClientWrapper(genai)
+    try:
+        # Configure the core library package directly
+        genai.configure(api_key=api_key)
+        
+        # Build an internal fallback routing class to prevent downstream errors
+        class DirectClientFallback:
+            def __init__(self, api):
+                self.models = self
+                self.api = api
+            def generate_content(self, model, contents, **kwargs):
+                # Safely routes text parsing directly to the active model pipeline
+                active_model = self.api.GenerativeModel(model)
+                return active_model.generate_content(contents, **kwargs)
+                
+        client = DirectClientFallback(genai)
+    except Exception as init_err:
+        st.error(f"Initialization failure: {init_err}")
 else:
-    st.sidebar.warning(" API Key Required: Please provide an active Gemini API key in the sidebar.")
-    st.info(" Welcome! To test this portfolio app, please paste a temporary Gemini API Key in the sidebar input box.")
+    st.sidebar.warning("⚠️ API Key Required: Please provide an active Gemini API key to evaluate resumes.")
+    st.info("👋 Welcome! To test this portfolio app, please paste a temporary Gemini API Key in the sidebar input box.")
     st.stop()
 
 # 3. Project Workflow Sidebar Controls
