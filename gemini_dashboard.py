@@ -41,9 +41,15 @@ if api_key:
     class LegacyCompatibilityBridge:
         def generate_content(self, *args, **kwargs):
             kwargs.pop('model', None)
-            passed_items = list(args)
-            if len(passed_items) == 1 and isinstance(passed_items, (list, tuple)):
-                passed_items = list(passed_items)
+                        # Correctly flatten nested tuples/lists passed by your downstream analysis code
+            passed_items = []
+            for arg in args:
+                if isinstance(arg, (list, tuple)):
+                    passed_items.extend(list(arg))
+                else:
+                    passed_items.append(arg)
+
+           
                 
             cleaned_inputs = []
             for item in passed_items:
