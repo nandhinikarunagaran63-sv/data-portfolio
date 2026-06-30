@@ -31,7 +31,8 @@ else:
 
 # Initialize the client only if a valid key is provided
 if api_key:
-    client = genai.configure(api_key=api_key)
+    genai.configure(api_key=api_key)
+    client = genai
 else:
     st.sidebar.warning(" API Key Required: Please provide an active Gemini API key to evaluate resumes.")
     st.stop()  # Safely halts app execution until a key is supplied
