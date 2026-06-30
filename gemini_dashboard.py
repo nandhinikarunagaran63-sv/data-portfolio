@@ -32,16 +32,25 @@ else:
 # Initialize the client only if a valid key is provided
 if api_key:
     genai.configure(api_key=api_key)
-    # Using a modern client dummy placeholder pattern to prevent NoneType crashes
-    class GeminiClient:
+    
+    # This wrapper translates your code's client calls to match the library version
+    class GeminiClientWrapper:
         def __init__(self, api):
-            self.models = api
-    client = GeminiClient(genai)
+            self.api = api
+            # If your code uses client.models
+            self.models = self 
+            
+        def generate_content(self, *args, **kwargs):
+            # Fallback to the working direct generative model layout
+            model_name = kwargs.pop('model', 'gemini-1.5-flash')
+            model = self.api.GenerativeModel(model_name)
+            return model.generate_content(*args, **kwargs)
+            
+    client = GeminiClientWrapper(genai)
 else:
     st.sidebar.warning(" API Key Required: Please provide an active Gemini API key in the sidebar.")
     st.info(" Welcome! To test this portfolio app, please paste a temporary Gemini API Key in the sidebar input box.")
     st.stop()
-
 
 # 3. Project Workflow Sidebar Controls
 st.sidebar.header(" Project Workflow Setup")
