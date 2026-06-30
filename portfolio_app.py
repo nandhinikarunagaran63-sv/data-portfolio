@@ -88,15 +88,13 @@ else:
                 "</div>",
                 unsafe_allow_html=True
             )
-            
+
         with col_photo:
             try:
+                # Direct public test image string 
                 st.image("https://ibb.co", use_container_width=True)
-                    "display: flex; align-items: center; justify-content: center; text-align: center; color: #64748b;'>"
-                    "Place your photo file 'my_photo.JPG' here"
-                    "</div>",
-                    unsafe_allow_html=True
-                )
+            except Exception as e:
+                st.error("Image loading failed.")
 
         st.markdown("### Personal Registry Details")
         with st.container():
