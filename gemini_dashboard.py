@@ -29,8 +29,8 @@ if api_key:
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel("gemini-1.5-flash")
 else:
-    st.sidebar.warning("⚠️ API Key Required: Please provide an active Gemini API key in the sidebar.")
-    st.info("👋 Welcome! To test this portfolio app, please paste a temporary Gemini API Key in the sidebar input box.")
+    st.sidebar.warning(" API Key Required: Please provide an active Gemini API key in the sidebar.")
+    st.info(" Welcome! To test this portfolio app, please paste a temporary Gemini API Key in the sidebar input box.")
     st.stop()
 
 # 3. Project Workflow Sidebar Controls
@@ -157,7 +157,7 @@ if uploaded_file and target_role:
             Enforce exactly: 10 Technical Questions, 5 Project-based questions based on their resume projects, and 5 behavioral Scenario-based questions for the role.
             """
 
-            response = client.models.generate_content(
+            response = model.generate_content(
                 model='gemini-2.5-flash',
                 contents=[file_part, prompt]
             )
