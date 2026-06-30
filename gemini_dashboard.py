@@ -52,7 +52,7 @@ if api_key:
                     cleaned_contents.append(self._parse_item(item))
             
             # Execute using the bulletproof, universal GenerativeModel layout
-            active_model = genai.GenerativeModel("gemini-pro")
+            active_model = genai.GenerativeModel("gemini-1.0-pro")
             return active_model.generate_content(cleaned_contents, **kwargs)
             
         def _parse_item(self, item):
