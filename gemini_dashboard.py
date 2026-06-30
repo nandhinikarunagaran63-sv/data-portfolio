@@ -59,19 +59,16 @@ if api_key:
                     cleaned_inputs.append({"mime_type": "application/pdf", "data": item.read()})
                 else:
                     cleaned_inputs.append(item)
-            
-     kwargs.pop('model', None)
-            
-            # Use the only stable model endpoint that works on this legacy server version
-            try:
-                active_model = genai.GenerativeModel("gemini-pro")
-                return active_model.generate_content(cleaned_inputs, **kwargs)
-            except Exception as e:
-                # Absolute baseline fallback option
-                active_model = genai.GenerativeModel("models/gemini-pro")
-                return active_model.generate_content(cleaned_inputs, **kwargs)       
-        client = LegacyCompatibilityBridge()
-        model = client
+                    
+                kwargs.pop('model', None)
+                try:
+                    active_model = genai.GenerativeModel("gemini-pro")
+                    return active_model.generate_content(cleaned_inputs, **kwargs)
+        except Exception as e:
+            active_model = genai.GenerativeModel("models/gemini-pro")
+            return active_model.generate_content(cleaned_inputs, **kwargs)
+    client = LegacyCompatibilityBridge()
+    model = client
 else:
     st.sidebar.warning(" API Key Required: Please provide an active Gemini API key in the sidebar.")
     st.info(" Welcome! To test this portfolio app, please paste a temporary Gemini API Key in the sidebar input box.")
