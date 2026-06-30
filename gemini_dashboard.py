@@ -23,23 +23,28 @@ else:
         help="Paste your temporary Gemini API Key here to run the resume analysis workflow."
     )
 
-# 2. Complete clean configuration fallback setup
 if api_key:
     # 1. Configure the core legacy library format directly
     genai.configure(api_key=api_key)
     
-    # 2. Universal CodeBridge wrapper that breaks open all modern SDK structures
+    # 2. Universal CodeBridge wrapper that safely handles keyword and positional contents
     class CodeBridge:
         def generate_content(self, *args, **kwargs):
             # Clean up keyword arguments to prevent legacy version conflicts
             kwargs.pop('model', None)
-            kwargs.pop('contents', None)
             
+            # Extract items from positional args or keyword contents argument
             passed_items = list(args)
-            cleaned_contents = []
+            if 'contents' in kwargs:
+                kw_contents = kwargs.pop('contents')
+                if isinstance(kw_contents, (list, tuple)):
+                    passed_items.extend(list(kw_contents))
+                else:
+                    passed_items.append(kw_contents)
             
+            cleaned_contents = []
             for item in passed_items:
-                # If your downstream code passes a list/tuple inside args, unpack it
+                # If an item is a list/tuple, unpack it safely
                 if isinstance(item, (list, tuple)):
                     for sub_item in item:
                         cleaned_contents.append(self._parse_item(sub_item))
