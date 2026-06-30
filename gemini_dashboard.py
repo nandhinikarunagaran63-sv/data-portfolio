@@ -62,13 +62,13 @@ if api_key:
                     
                 kwargs.pop('model', None)
                 try:
-                    active_model = genai.GenerativeModel("gemini-pro")
+                    active_model = genai.GenerativeModel("gemini-1.5-flash-latest")
                     return active_model.generate_content(cleaned_inputs, **kwargs)
                 except Exception as e:
-                    active_model = genai.GenerativeModel("models/gemini-pro")
+                    active_model = genai.GenerativeModel("models/gemini-1.5-flash")
                     return active_model.generate_content(cleaned_inputs, **kwargs)
-    client = LegacyCompatibilityBridge()
-    model = client
+             client = LegacyCompatibilityBridge()
+             model = client
 else:
     st.sidebar.warning(" API Key Required: Please provide an active Gemini API key in the sidebar.")
     st.info(" Welcome! To test this portfolio app, please paste a temporary Gemini API Key in the sidebar input box.")
