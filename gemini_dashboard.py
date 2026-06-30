@@ -22,18 +22,10 @@ else:
         placeholder="Enter AI Studio API Key...",
         help="Paste your temporary Gemini API Key here to run the resume analysis workflow."
     )
-    # 2. Complete clean configuration fallback setup
-if api_key:
-    # Initialize the modern, official client layout securely
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-1.5-flash")
-    client = model  # Ensures any downstream code using 'client' continues to work
-else:
-    st.sidebar.warning("⚠️ API Key Required: Please provide an active Gemini API key to evaluate resumes.")
-    st.info("👋 Welcome! To test this portfolio app, please paste a temporary Gemini API Key in the sidebar input box.")
-    st.stop()
-
-
+    st.sidebar.info(" Welcome to my portfolio! This AI resume intelligence feature is currently undergoing a backend infrastructure update.")
+st.sidebar.success(" Please feel free to explore my core project dashboards and university details!")
+st.stop()
+    
 # 3. Project Workflow Sidebar Controls
 st.sidebar.header(" Project Workflow Setup")
 st.sidebar.markdown("---")
