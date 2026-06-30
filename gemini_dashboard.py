@@ -22,9 +22,52 @@ else:
         placeholder="Enter AI Studio API Key...",
         help="Paste your temporary Gemini API Key here to run the resume analysis workflow."
     )
-    st.sidebar.info(" Welcome to my portfolio! This AI resume intelligence feature is currently undergoing a backend infrastructure update.")
-st.sidebar.success(" Please feel free to explore my core project dashboards and university details!")
-st.stop()
+ # 2. Restored Dynamic Gemini Client Configuration
+import google.generativeai as genai
+
+if "GEMINI_API_KEY" in st.secrets and st.secrets["GEMINI_API_KEY"]:
+    api_key = st.secrets["GEMINI_API_KEY"]
+else:
+    api_key = st.sidebar.text_input(
+        label="Gemini API Authorization",
+        type="password",
+        placeholder="AIzaSy...",
+        help="Paste a free trial Gemini API Key here to run the live resume analysis layout."
+    )
+
+if api_key:
+    genai.configure(api_key=api_key)
+    
+    class LegacyCompatibilityBridge:
+        def generate_content(self, *args, **kwargs):
+            kwargs.pop('model', None)
+            passed_items = list(args)
+            if len(passed_items) == 1 and isinstance(passed_items, (list, tuple)):
+                passed_items = list(passed_items)
+                
+            cleaned_inputs = []
+            for item in passed_items:
+                if isinstance(item, dict) and "data" in item:
+                    cleaned_inputs.append({"mime_type": "application/pdf", "data": item["data"]})
+                elif hasattr(item, 'read'):
+                    cleaned_inputs.append({"mime_type": "application/pdf", "data": item.read()})
+                else:
+                    cleaned_inputs.append(item)
+            
+            try:
+                active_model = genai.GenerativeModel("gemini-pro")
+                return active_model.generate_content(cleaned_inputs, **kwargs)
+            except Exception:
+                active_model = genai.GenerativeModel("models/gemini-1.5-flash")
+                return active_model.generate_content(cleaned_inputs, **kwargs)
+
+    client = LegacyCompatibilityBridge()
+    model = client
+else:
+    st.sidebar.warning("⚠️ API Key Required: Please provide an active Gemini API key in the sidebar.")
+    st.info("👋 Welcome! To test this portfolio app, please paste a temporary Gemini API Key in the sidebar input box.")
+    st.stop()
+
     
 # 3. Project Workflow Sidebar Controls
 st.sidebar.header(" Project Workflow Setup")
