@@ -23,36 +23,43 @@ else:
         placeholder="Enter AI Studio API Key...",
         help="Paste a temporary Gemini API Key here to run the resume analysis workflow."
     )
-    if api_key:
+  if api_key:
     # 1. Configure the core library
     genai.configure(api_key=api_key)
     
-    # 2. Create a smart interface wrapper that works on any library version
+    # 2. Create a smart interface wrapper that fixes tuples and lists
     class CodeBridge:
         def generate_content(self, *args, **kwargs):
             # Clean up keyword arguments to prevent legacy version conflicts
             kwargs.pop('model', None)
             
-            # Extract arguments cleanly
-            passed_args = list(args)
-            
-            # If your code passes a raw list containing the PDF data dictionary, extract the text/bytes out of it
-            if passed_args and isinstance(passed_args[0], list):
-                cleaned_contents = []
-                for item in passed_args[0]:
-                    if isinstance(item, dict) and "data" in item:
-                        # Convert structural dictionary blobs into clean legacy format mapping parameters
-                        cleaned_contents.append({
-                            "mime_type": item.get("mime_type", "application/pdf"),
-                            "data": item["data"]
-                        })
-                    else:
-                        cleaned_contents.append(item)
-                passed_args[0] = cleaned_contents
+            # Unpack args whether it comes in as a tuple or a nested list
+            passed_items = list(args)
+            if len(passed_items) == 1 and isinstance(passed_items[0], (list, tuple)):
+                passed_items = list(passed_items[0])
+                
+            cleaned_contents = []
+            for item in passed_items:
+                # If it's the raw dictionary with the PDF data, convert it to standard dictionary structure
+                if isinstance(item, dict) and "data" in item:
+                    cleaned_contents.append({
+                        "mime_type": item.get("mime_type", "application/pdf"),
+                        "data": item["data"]
+                    })
+                # If your code passed a raw dictionary containing an older layout, extract it
+                elif hasattr(item, "to_dict") or str(type(item))."Part" in str(type(item)):
+                    # Bypasses the strict class check by treating it as raw text/bytes if possible
+                    cleaned_contents.append(item)
+                else:
+                    cleaned_contents.append(item)
 
             # Execute using the bulletproof, universal GenerativeModel layout
             active_model = genai.GenerativeModel("gemini-1.5-flash")
-            return active_model.generate_content(*passed_args, **kwargs)
+            return active_model.generate_content(cleaned_contents, **kwargs)
+            
+        @property
+        def models(self):
+            return self
             
     # Point both naming configurations to our interface bridge
     client = CodeBridge()
