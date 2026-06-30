@@ -22,74 +22,17 @@ else:
         placeholder="Enter AI Studio API Key...",
         help="Paste your temporary Gemini API Key here to run the resume analysis workflow."
     )
-
+    # 2. Complete clean configuration fallback setup
 if api_key:
-    # 1. Configure the core legacy library format directly
+    # Initialize the modern, official client layout securely
     genai.configure(api_key=api_key)
-    
-    # 2. Universal CodeBridge wrapper that safely handles keyword and positional contents
-    class CodeBridge:
-        def generate_content(self, *args, **kwargs):
-            # Clean up keyword arguments to prevent legacy version conflicts
-            kwargs.pop('model', None)
-            
-            # Extract items from positional args or keyword contents argument
-            passed_items = list(args)
-            if 'contents' in kwargs:
-                kw_contents = kwargs.pop('contents')
-                if isinstance(kw_contents, (list, tuple)):
-                    passed_items.extend(list(kw_contents))
-                else:
-                    passed_items.append(kw_contents)
-            
-            cleaned_contents = []
-            for item in passed_items:
-                # If an item is a list/tuple, unpack it safely
-                if isinstance(item, (list, tuple)):
-                    for sub_item in item:
-                        cleaned_contents.append(self._parse_item(sub_item))
-                else:
-                    cleaned_contents.append(self._parse_item(item))
-            
-            # Execute using the bulletproof, universal GenerativeModel layout
-            active_model = genai.GenerativeModel("gemini-1.0-pro")
-            return active_model.generate_content(cleaned_contents, **kwargs)
-            
-        def _parse_item(self, item):
-            # Safe text extractor for new 'Part' structures or dictionary uploads
-            try:
-                # Scenario A: Check if it's a modern Part object with raw inline data
-                if hasattr(item, 'inline_data') and item.inline_data:
-                    return {
-                        "mime_type": getattr(item.inline_data, "mime_type", "application/pdf"),
-                        "data": item.inline_data.data
-                    }
-                # Scenario B: Check if it's a standard key-value dictionary layout
-                elif isinstance(item, dict) and "data" in item:
-                    return {
-                        "mime_type": item.get("mime_type", "application/pdf"),
-                        "data": item["data"]
-                    }
-                # Scenario C: If it has custom dictionary exporters
-                elif hasattr(item, 'to_dict'):
-                    d = item.to_dict()
-                    if 'inline_data' in d:
-                        return {"mime_type": d['inline_data'].get('mime_type', 'application/pdf'), "data": d['inline_data']['data']}
-                return item
-            except Exception:
-                return item
-            
-        @property
-        def models(self):
-            return self
-
-    # Point both naming configurations to our secure interface bridge
-    client = CodeBridge()
-    model = client
+    model = genai.GenerativeModel("gemini-1.5-flash")
+    client = model  # Ensures any downstream code using 'client' continues to work
 else:
     st.sidebar.warning("⚠️ API Key Required: Please provide an active Gemini API key to evaluate resumes.")
     st.info("👋 Welcome! To test this portfolio app, please paste a temporary Gemini API Key in the sidebar input box.")
     st.stop()
+
 
 # 3. Project Workflow Sidebar Controls
 st.sidebar.header(" Project Workflow Setup")
@@ -215,10 +158,8 @@ if uploaded_file and target_role:
             Enforce exactly: 10 Technical Questions, 5 Project-based questions based on their resume projects, and 5 behavioral Scenario-based questions for the role.
             """
 
-            response = model.generate_content(
-                model='gemini-2.5-flash',
-                contents=[file_part, prompt]
-            )
+            response = model.generate_content([uploaded_file,prompt])
+            
             
             # Safely strip out markdown formatting fences if added by the LLM
             raw_text = response.text.strip()
