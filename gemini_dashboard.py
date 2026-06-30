@@ -64,9 +64,9 @@ if api_key:
                 try:
                     active_model = genai.GenerativeModel("gemini-pro")
                     return active_model.generate_content(cleaned_inputs, **kwargs)
-        except Exception as e:
-            active_model = genai.GenerativeModel("models/gemini-pro")
-            return active_model.generate_content(cleaned_inputs, **kwargs)
+                except Exception as e:
+                    active_model = genai.GenerativeModel("models/gemini-pro")
+                    return active_model.generate_content(cleaned_inputs, **kwargs)
     client = LegacyCompatibilityBridge()
     model = client
 else:
