@@ -1,22 +1,22 @@
 import streamlit as st
 import json
 import base64
-import requests
+import google.genai as genai
+from google.genai import types
 from fpdf import FPDF
 
+# 1. Setup Streamlit Page Layout
 st.set_page_config(page_title="Enterprise AI Resume Intelligence", layout="wide")
 st.title(" Enterprise AI Resume Intelligence Dashboard")
 st.caption("Complete End-to-End Autonomous Talent Processing System")
 
+# 2. Secure Direct Endpoint Route Setup
 if "GEMINI_API_KEY" in st.secrets:
     api_key = st.secrets["GEMINI_API_KEY"]
 else:
-    api_key = st.sidebar.text_input(
-        label="Gemini API Authorization",
-        type="password",
-        placeholder="Enter your Gemini API key (AIzaSy...)"
-    )
+    api_key = ""
 
+# 3. Project Workflow Sidebar Controls
 st.sidebar.header(" Project Workflow Setup")
 st.sidebar.markdown("---")
 st.sidebar.info(" **Step 1:** Select target profile.")
@@ -26,6 +26,7 @@ st.sidebar.markdown("---")
 st.sidebar.info(" **Step 2:** Upload resume document.")
 uploaded_file = st.sidebar.file_uploader(" Upload Resume:", type=["pdf"])
 
+# Helper function to generate a truly complete PDF report block safely
 def create_pdf_report(data):
     pdf = FPDF()
     pdf.add_page()
@@ -91,67 +92,48 @@ def create_pdf_report(data):
         
     return bytes(pdf.output())
 
+# 4. Processing Engine Execution
 if not api_key:
-    st.sidebar.warning("⚠️ API Key Required: Please provide an active Gemini API key in the sidebar.")
-    st.info("👋 Welcome! To test this portfolio app, please paste a temporary Gemini API Key in the sidebar input box.")
+    st.sidebar.warning("⚠️ Streamlit Secrets Vault Setup Missing: Please ensure GEMINI_API_KEY is defined in your cloud settings panel.")
     st.stop()
 
 if uploaded_file and target_role:
     with st.spinner(" Executing Deep Talent Evaluation Workflow... Please Wait..."):
         try:
+            # Initialize the modern official GenAI client using our secure vault key token
+            client = genai.Client(api_key=api_key)
+            
             pdf_bytes = uploaded_file.read()
-            base64_pdf = base64.b64encode(pdf_bytes).decode("utf-8")
 
-            prompt = f"""
-            You are an expert AI Executive Recruiter and Technical Lead.
-            Analyze the attached resume completely against the target job role: '{target_role}'.
+            prompt = f"Analyze this resume against target job role: '{target_role}'."
             
-            You MUST return a single, valid JSON object containing exactly these fields populated with rich detailed text parsed from the resume context:
-            {{
-                "candidate_name": "Extract the actual full name of the candidate found in the resume document",
-                "target_role": "{target_role}",
-                "readiness_score": 85,
-                "missing_skills": "Write a highly comprehensive bulleted analysis of specific skills gaps and tools missing compared to the role criteria",
-                "recommended_certs": "Recommend explicit professional courses and certifications to fill those exact learning gaps",
-                "technical_questions": [Provide a list of EXACTLY 10 distinct, deep technical interview questions based on their gaps],
-                "project_questions": [Provide a list of EXACTLY 5 structural, architecture-focused project evaluation questions],
-                "scenario_questions": [Provide a list of EXACTLY 5 complex situational or case study assessment questions]
-            }}
-            """
+            # Request content using structural type constraints to guarantee clean text handling
+            response = client.models.generate_content(
+                model='gemini-1.5-flash',
+                contents=[
+                    types.Part.from_bytes(data=pdf_bytes, mime_type='application/pdf'),
+                    prompt
+                ],
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=types.Schema(
+                        type=types.Type.OBJECT,
+                        properties={
+                            "candidate_name": types.Schema(type=types.Type.STRING),
+                            "target_role": types.Schema(type=types.Type.STRING),
+                            "readiness_score": types.Schema(type=types.Type.INTEGER),
+                            "missing_skills": types.Schema(type=types.Type.STRING),
+                            "recommended_certs": types.Schema(type=types.Type.STRING),
+                            "technical_questions": types.Schema(type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)),
+                            "project_questions": types.Schema(type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)),
+                            "scenario_questions": types.Schema(type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)),
+                        },
+                        required=["candidate_name", "target_role", "readiness_score", "missing_skills", "recommended_certs", "technical_questions", "project_questions", "scenario_questions"]
+                    )
+                )
+            )
             
-            part_a = "https://googleapis.com"
-            part_b = "/v1beta/models/gemini-1.5-flash:generateContent?key="
-            api_url = part_a + part_b + str(api_key)
-            
-            headers = {"Content-Type": "application/json"}
-            payload = {
-                "contents": [{
-                    "parts": [
-                        {"inlineData": {"mimeType": "application/pdf", "data": base64_pdf}},
-                        {"text": prompt}
-                    ]
-                }],
-                "generationConfig": {
-                    "responseMimeType": "application/json"
-                }
-            }
-            
-            web_response = requests.post(api_url, headers=headers, json=payload)
-            response_json = web_response.json()
-            
-            if "candidates" in response_json:
-                raw_text = response_json['candidates'][0]['content']['parts'][0]['text']
-                
-                start_idx = raw_text.find("{")
-                end_idx = raw_text.rfind("}")
-                if start_idx != -1 and end_idx != -1:
-                    raw_text = raw_text[start_idx:end_idx + 1]
-                    
-                parsed_json = json.loads(raw_text)
-            else:
-                st.error(f"API Error Response: {response_json}")
-                st.stop()
-            
+            parsed_json = json.loads(response.text)
             st.success("🎉 Analysis Complete!")
             
             col1, col2 = st.columns(2)
