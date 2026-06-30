@@ -9,7 +9,7 @@ st.set_page_config(page_title="Enterprise AI Resume Intelligence", layout="wide"
 st.title(" Enterprise AI Resume Intelligence Dashboard")
 st.caption("Complete End-to-End Autonomous Talent Processing System")
 
-# 2. Secure Direct Endpoint Route Setup (Bypasses Library Version Mismatches)
+# 2. Secure Direct Endpoint Route Setup
 if "GEMINI_API_KEY" in st.secrets and st.secrets["GEMINI_API_KEY"]:
     api_key = st.secrets["GEMINI_API_KEY"]
 else:
@@ -104,7 +104,6 @@ if not api_key:
 if uploaded_file and target_role:
     with st.spinner(" Executing Deep Talent Evaluation Workflow... Please Wait..."):
         try:
-            # Safely encode the PDF data bytes to base64 to send via direct web request channel
             pdf_bytes = uploaded_file.read()
             base64_pdf = base64.b64encode(pdf_bytes).decode("utf-8")
 
@@ -125,8 +124,11 @@ if uploaded_file and target_role:
             }}
             """
             
-            # Direct HTTP connection pipeline to Gemini production API endpoints
-            api_url = f"https://googleapis.com{api_key}"
+            # The correct un-truncated endpoint string concatenation construction layout
+            part_a = "https://googleapis.com"
+            part_b = "/v1beta/models/gemini-1.5-flash:generateContent?key="
+            api_url = part_a + part_b + str(api_key)
+            
             headers = {"Content-Type": "application/json"}
             payload = {
                 "contents": [{
@@ -152,7 +154,6 @@ if uploaded_file and target_role:
             
             st.success("🎉 Analysis Complete!")
             
-            # Display real human-readable layout cards
             col1, col2 = st.columns(2)
             with col1:
                 st.metric(label="👤 Candidate Profile Name", value=parsed_json.get('candidate_name', 'Applicant'))
@@ -184,7 +185,6 @@ if uploaded_file and target_role:
             for idx, q in enumerate(parsed_json.get("scenario_questions", []), 1):
                 st.write(f"**Question {idx}:** {q}")
             
-            # Secure report downloader creation block
             try:
                 final_pdf_bytes = create_pdf_report(parsed_json)
                 st.sidebar.markdown("---")
