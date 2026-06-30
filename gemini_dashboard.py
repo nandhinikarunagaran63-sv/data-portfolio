@@ -12,7 +12,6 @@ st.caption("Complete End-to-End Autonomous Talent Processing System")
 # 2. Universal Open-Source AI Model Integration (Bypasses Google Endpoints Completely)
 @st.cache_resource
 def load_analysis_model():
-    # Fixed the task name to 'text-generation' to match the active server library version
     return pipeline("text-generation", model="google/flan-t5-base")
 
 try:
@@ -20,7 +19,6 @@ try:
     
     class LocalAIModelBridge:
         def generate_content(self, *args, **kwargs):
-            # Capture the prompt string text passing from your dropdown selectors
             prompt_text = ""
             for item in args:
                 if isinstance(item, str):
@@ -30,17 +28,14 @@ try:
                         if isinstance(sub_item, str):
                             prompt_text += sub_item
 
-            # Execute the resume analysis text generation processing loop locally
             results = analyzer_pipeline(prompt_text, max_length=512, do_sample=False)
             generated_text = results[0]['generated_text'] if isinstance(results, list) else results['generated_text']
             
-            # Create a mock response object structure so your downstream code functions perfectly
             class MockResponse:
                 def __init__(self, text_output):
                     self.text = text_output
             return MockResponse(generated_text)
 
-    # Point your old variable configurations to our new local framework bridge
     client = LocalAIModelBridge()
     model = client
 except Exception as model_err:
@@ -61,12 +56,10 @@ def create_pdf_report(data):
     pdf = FPDF()
     pdf.add_page()
     
-    # Title Banner
     pdf.set_font("Arial", "B", 16)
     pdf.cell(0, 10, "AUTONOMOUS CAREER EVALUATION REPORT", ln=True, align='C')
     pdf.ln(5)
     
-    # Candidate Summary Box
     pdf.set_font("Arial", "B", 12)
     pdf.cell(50, 8, "Candidate Name:", 0, 0)
     pdf.set_font("Arial", "", 12)
@@ -83,21 +76,18 @@ def create_pdf_report(data):
     pdf.cell(0, 8, f"{data.get('readiness_score', 'N/A')}/100", ln=True)
     pdf.ln(5)
     
-    # Section: Gaps
     pdf.set_font("Arial", "B", 14)
     pdf.cell(0, 10, "1. Skill Gap Analysis", ln=True)
     pdf.set_font("Arial", "", 10)
     pdf.multi_cell(190, 5, str(data.get('missing_skills', '')).replace('•', '-'))
     pdf.ln(5)
     
-    # Section: Learning recommendations
     pdf.set_font("Arial", "B", 14)
     pdf.cell(0, 10, "2. Course & Certification Recommendations", ln=True)
     pdf.set_font("Arial", "", 10)
     pdf.multi_cell(190, 5, str(data.get('recommended_certs', '')).replace('•', '-'))
     pdf.ln(5)
     
-    # Section: Generated Questions List
     pdf.set_font("Arial", "B", 14)
     pdf.cell(0, 10, "3. Personalized Interview Preparation Matrix", ln=True)
     pdf.ln(2)
@@ -125,7 +115,7 @@ def create_pdf_report(data):
         pdf.multi_cell(190, 5, f"Q{idx}: {q}")
         pdf.ln(2) 
         
-    return bytes(pdf.output(), encoding="utf-8")
+    return bytes(pdf.output())
 
 # 4. Processing Engine Execution
 if uploaded_file and target_role:
@@ -141,10 +131,8 @@ if uploaded_file and target_role:
             Return single JSON with keys: candidate_name, target_role, readiness_score, missing_skills, recommended_certs, technical_questions, project_questions, scenario_questions.
             """
             
-            # Use the local model to handle content securely and uniformly
             response = model.generate_content(prompt)
             
-            # Simple fallback structure if the small local model outputs basic text instead of precise json structures
             try:
                 parsed_json = json.loads(response.text)
             except Exception:
@@ -159,9 +147,8 @@ if uploaded_file and target_role:
                     "scenario_questions": ["How do you handle production timeline constraints?"]
                 }
             
-                      st.success("🎉 Analysis Complete!")
+            st.success("🎉 Analysis Complete!")
             
-            # Create professional visual metric cards at the top
             col1, col2 = st.columns(2)
             with col1:
                 st.metric(label="👤 Candidate Profile", value=parsed_json.get('candidate_name', 'Applicant'))
@@ -169,8 +156,6 @@ if uploaded_file and target_role:
                 st.metric(label="🎯 Role Readiness Score", value=f"{parsed_json.get('readiness_score', 75)}/100")
             
             st.markdown("---")
-            
-            # Display information in clean simple wording format
             st.subheader("📋 Target Job Position")
             st.write(parsed_json.get('target_role', target_role))
             
@@ -183,7 +168,6 @@ if uploaded_file and target_role:
             st.markdown("---")
             st.subheader("💡 Personalized Interview Preparation Matrix")
             
-            # Print questions in clean numbered text formats
             st.markdown("### 🛠️ Technical Concept Questions")
             for idx, q in enumerate(parsed_json.get("technical_questions", []), 1):
                 st.write(f"**Question {idx}:** {q}")
@@ -196,9 +180,7 @@ if uploaded_file and target_role:
             for idx, q in enumerate(parsed_json.get("scenario_questions", []), 1):
                 st.write(f"**Question {idx}:** {q}")
             
-            # Structural PDF Exporter Dashboard Attachment
             try:
-                # Fixed byte mapping layout
                 pdf_bytes = create_pdf_report(parsed_json)
                 st.sidebar.markdown("---")
                 st.sidebar.download_button(
@@ -212,4 +194,3 @@ if uploaded_file and target_role:
                 
         except Exception as e:
             st.error(f"Execution Failure: {e}")
-
