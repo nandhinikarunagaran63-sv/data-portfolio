@@ -9,7 +9,7 @@ st.set_page_config(page_title="Enterprise AI Resume Intelligence", layout="wide"
 st.title(" Enterprise AI Resume Intelligence Dashboard")
 st.caption("Complete End-to-End Autonomous Talent Processing System")
 
-# 2. Secure Direct Endpoint Route Setup
+# 2. Secure Direct Endpoint Route Setup (Bypasses Library Version Mismatches)
 if "GEMINI_API_KEY" in st.secrets and st.secrets["GEMINI_API_KEY"]:
     api_key = st.secrets["GEMINI_API_KEY"]
 else:
@@ -146,7 +146,14 @@ if uploaded_file and target_role:
             response_json = web_response.json()
             
             if "candidates" in response_json:
-                raw_text = response_json['candidates'][0]['content']['parts'][0]['text']
+                raw_text = response_json['candidates'][0]['content']['parts'][0]['text'].strip()
+                
+                # Clean off any Markdown text container wrappers wrapped by the LLM
+                if raw_text.startswith("```json"):
+                    raw_text = raw_text.split("```json")[1].split("```")[0].strip()
+                elif raw_text.startswith("```"):
+                    raw_text = raw_text.split("```")[1].split("```")[0].strip()
+                    
                 parsed_json = json.loads(raw_text)
             else:
                 st.error(f"API Error Response: {response_json}")
