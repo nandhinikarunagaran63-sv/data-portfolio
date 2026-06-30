@@ -159,14 +159,50 @@ if uploaded_file and target_role:
                     "scenario_questions": ["How do you handle production timeline constraints?"]
                 }
             
-            st.success("Analysis Complete!")
-            st.json(parsed_json)
+                      st.success("🎉 Analysis Complete!")
             
-            # Structural PDF Exporter
+            # Create professional visual metric cards at the top
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric(label="👤 Candidate Profile", value=parsed_json.get('candidate_name', 'Applicant'))
+            with col2:
+                st.metric(label="🎯 Role Readiness Score", value=f"{parsed_json.get('readiness_score', 75)}/100")
+            
+            st.markdown("---")
+            
+            # Display information in clean simple wording format
+            st.subheader("📋 Target Job Position")
+            st.write(parsed_json.get('target_role', target_role))
+            
+            st.subheader("🔍 Skill Gap Analysis")
+            st.write(parsed_json.get('missing_skills', ''))
+            
+            st.subheader("🎓 Recommended Courses & Certifications")
+            st.write(parsed_json.get('recommended_certs', ''))
+            
+            st.markdown("---")
+            st.subheader("💡 Personalized Interview Preparation Matrix")
+            
+            # Print questions in clean numbered text formats
+            st.markdown("### 🛠️ Technical Concept Questions")
+            for idx, q in enumerate(parsed_json.get("technical_questions", []), 1):
+                st.write(f"**Question {idx}:** {q}")
+                
+            st.markdown("### 💻 Project-Based Probes")
+            for idx, q in enumerate(parsed_json.get("project_questions", []), 1):
+                st.write(f"**Question {idx}:** {q}")
+                
+            st.markdown("### 📊 Case Scenario Challenges")
+            for idx, q in enumerate(parsed_json.get("scenario_questions", []), 1):
+                st.write(f"**Question {idx}:** {q}")
+            
+            # Structural PDF Exporter Dashboard Attachment
             try:
+                # Fixed byte mapping layout
                 pdf_bytes = create_pdf_report(parsed_json)
+                st.sidebar.markdown("---")
                 st.sidebar.download_button(
-                    label="Download Final PDF Report",
+                    label="📥 Download Final PDF Report",
                     data=pdf_bytes,
                     file_name=f"{parsed_json.get('candidate_name', 'Candidate')}_Full_Analysis.pdf",
                     mime="application/pdf"
@@ -176,3 +212,4 @@ if uploaded_file and target_role:
                 
         except Exception as e:
             st.error(f"Execution Failure: {e}")
+
