@@ -23,28 +23,48 @@ else:
         placeholder="Enter AI Studio API Key...",
         help="Paste a temporary Gemini API Key here to run the resume analysis workflow."
     )
-
-if api_key:
+    if api_key:
     # 1. Configure the core library
     genai.configure(api_key=api_key)
     
-    # 2. Create a smart interface wrapper to bridge your old code layout
+    # 2. Create a smart interface wrapper that works on any library version
     class CodeBridge:
         def generate_content(self, *args, **kwargs):
-            # If your code passed model="gemini...", strip it out to prevent the crash
+            # Clean up keyword arguments to prevent legacy version conflicts
             kwargs.pop('model', None)
             
-            # Use the correct direct GenerativeModel pipeline format
-            active_model = genai.GenerativeModel("gemini-1.5-flash")
-            return active_model.generate_content(*args, **kwargs)
+            # Extract arguments cleanly
+            passed_args = list(args)
             
-    # Point both variables to our smart bridge function
+            # If your code passes a raw list containing the PDF data dictionary, extract the text/bytes out of it
+            if passed_args and isinstance(passed_args[0], list):
+                cleaned_contents = []
+                for item in passed_args[0]:
+                    if isinstance(item, dict) and "data" in item:
+                        # Convert structural dictionary blobs into clean legacy format mapping parameters
+                        cleaned_contents.append({
+                            "mime_type": item.get("mime_type", "application/pdf"),
+                            "data": item["data"]
+                        })
+                    else:
+                        cleaned_contents.append(item)
+                passed_args[0] = cleaned_contents
+
+            # Execute using the bulletproof, universal GenerativeModel layout
+            active_model = genai.GenerativeModel("gemini-1.5-flash")
+            return active_model.generate_content(*passed_args, **kwargs)
+            
+    # Point both naming configurations to our interface bridge
     client = CodeBridge()
     model = client
 else:
-    st.sidebar.warning(" API Key Required: Please provide an active Gemini API key in the sidebar.")
-    st.info(" Welcome! To test this portfolio app, please paste a temporary Gemini API Key in the sidebar input box.")
+    st.sidebar.warning("⚠️ API Key Required: Please provide an active Gemini API key in the sidebar.")
+    st.info("👋 Welcome! To test this portfolio app, please paste a temporary Gemini API Key in the sidebar input box.")
     st.stop()
+
+
+
+   
 
 
 # 3. Project Workflow Sidebar Controls
