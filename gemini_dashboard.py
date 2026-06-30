@@ -109,7 +109,7 @@ if uploaded_file and target_role:
             
             # Request content using structural type constraints to guarantee clean text handling
             response = client.models.generate_content(
-                model='gemini-1.5-flash',
+                model='gemini-2.5-flash',
                 contents=[
                     types.Part.from_bytes(data=pdf_bytes, mime_type='application/pdf'),
                     prompt
