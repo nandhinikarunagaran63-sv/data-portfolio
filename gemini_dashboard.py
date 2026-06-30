@@ -157,9 +157,16 @@ if uploaded_file and target_role:
             
             Enforce exactly: 10 Technical Questions, 5 Project-based questions based on their resume projects, and 5 behavioral Scenario-based questions for the role.
             """
+            file_bytes = uploaded_file.read()
+            pdf_data_package = {
+                "mime_type": "application/pdf",
+                "data": file_bytes
+            }
+            response = model.generate_content([pdf_data_package, prompt])
 
-            response = model.generate_content([uploaded_file,prompt])
-            
+           
+          
+
             
             # Safely strip out markdown formatting fences if added by the LLM
             raw_text = response.text.strip()
