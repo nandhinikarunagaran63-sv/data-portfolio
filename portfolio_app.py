@@ -91,11 +91,7 @@ else:
             
         with col_photo:
             try:
-                st.image(r"C:\Users\vijay\OneDrive\Documents\WhatsApp Image 2026-06-29 at 6.33.50 PM.jpeg", use_container_width=True, caption="Identity Node Frame")
-            except:
-                # Decorative placeholder box if photo file is missing
-                st.markdown(
-                    "<div style='background-color: #e2e8f0; height: 160px; border-radius: 6px; "
+                st.image("https://ibb.co", use_container_width=True)
                     "display: flex; align-items: center; justify-content: center; text-align: center; color: #64748b;'>"
                     "Place your photo file 'my_photo.JPG' here"
                     "</div>",
