@@ -8,7 +8,7 @@ st.set_page_config(page_title="Enterprise AI Resume Intelligence", layout="wide"
 st.title(" Enterprise AI Resume Intelligence Dashboard")
 st.caption("Complete End-to-End Autonomous Talent Processing System")
 
-if "GEMINI_API_KEY" in st.secrets and st.secrets["GEMINI_API_KEY"]:
+if "GEMINI_API_KEY" in st.secrets:
     api_key = st.secrets["GEMINI_API_KEY"]
 else:
     api_key = st.sidebar.text_input(
