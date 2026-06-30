@@ -10,9 +10,8 @@ st.set_page_config(page_title="Enterprise AI Resume Intelligence", layout="wide"
 st.title(" Enterprise AI Resume Intelligence Dashboard")
 st.caption("Complete End-to-End Autonomous Talent Processing System")
 
-# 2. Configure Gemini Client
-API_KEY = "AQ.Ab8RN6LiRquuDQrOfpRyDE3bW_282YePrltSJKUOPMab7vxQtg" 
-client = genai.Client(api_key=API_KEY)
+# 2. Configure Gemini Client using Streamlit Secrets
+client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
 # 3. Project Workflow Sidebar Controls
 st.sidebar.header(" Project Workflow Setup")
